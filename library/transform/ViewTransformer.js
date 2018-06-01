@@ -177,7 +177,7 @@ export default class ViewTransformer extends React.Component {
       dy = d.dy;
     }
 
-    if(!this.props.enableTranslate) {
+    if(!this.props.enableTranslate || (this.props.requireZoom && this.state.scale <= 1)) {
       dx = dy = 0;
     }
 
@@ -237,7 +237,7 @@ export default class ViewTransformer extends React.Component {
 
       this.performDoubleTapUp(pivotX, pivotY);
     } else {
-      if(this.props.enableTranslate) {
+      if(this.props.enableTranslate && (!this.props.requireZoom || this.state.scale > 1)) {
         this.performFling(gestureState.vx, gestureState.vy);
       } else {
         this.animateBounce();
@@ -435,6 +435,11 @@ ViewTransformer.propTypes = {
   enableTranslate: PropTypes.bool,
 
   /**
+   * Use true to disable translate when not zoomed. Default is false.
+   */
+  requireZoom: PropTypes.bool,
+
+  /**
    * Default is 20
    */
   maxOverScrollDistance: PropTypes.number,
@@ -458,6 +463,7 @@ ViewTransformer.defaultProps = {
   enableScale: true,
   enableTranslate: true,
   enableTransform: true,
+  requireZoom: false,
   maxScale: 1,
   enableResistance: false
 };

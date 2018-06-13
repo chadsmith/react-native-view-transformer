@@ -96,6 +96,11 @@ export default class ViewTransformer extends React.Component {
     });
   }
 
+  componentWillReceiveProps(nextProps) {
+    if(this.props.maxScale !== nextProps.maxScale && this.state.scale > nextProps.maxScale)
+      this.zoomOut(nextProps.maxScale);
+  }
+
   componentDidUpdate(prevProps, prevState) {
     this.props.onViewTransformed && this.props.onViewTransformed({
       scale: this.state.scale,
@@ -245,10 +250,21 @@ export default class ViewTransformer extends React.Component {
     }
   }
 
+  zoomOut(newScale) {
+    let curScale = this.state.scale;
+    let scaleBy = (newScale || 1) / curScale;
+    let rect = transformedRect(this.transformedContentRect(), new Transform(
+      scaleBy, 0, 0,
+      {
+        x: 0,
+        y: 0
+      }
+    ));
+    rect = transformedRect(rect, new Transform(1, this.viewPortRect().centerX(), this.viewPortRect().centerY()));
+    rect = alignedRect(rect, this.viewPortRect());
 
-
-
-
+    this.animate(rect);
+  }
 
   performFling(vx, vy) {
     let startX = 0;
@@ -304,7 +320,7 @@ export default class ViewTransformer extends React.Component {
     if (curScale > (1 + this.props.maxScale) / 2) {
       scaleBy = 1 / curScale;
     } else {
-      scaleBy = this.props.maxScale / curScale;
+      scaleBy = Math.max(1, this.props.maxScale / 2) / curScale;
     }
 
     let rect = transformedRect(this.transformedContentRect(), new Transform(
